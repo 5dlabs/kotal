@@ -152,7 +152,7 @@ func (n *Node) DefaultNodeResources() {
 	if n.Spec.Resources.Storage == "" {
 		if privateNetwork {
 			storage = DefaultPrivateNetworkNodeStorageRequest
-		} else if network == MainNetwork && n.Spec.SyncMode == FastSynchronization {
+		} else if network == MainNetwork && (n.Spec.SyncMode == FastSynchronization || n.Spec.SyncMode == SnapSynchronization) {
 			storage = DefaultMainNetworkFastNodeStorageRequest
 		} else if network == MainNetwork && n.Spec.SyncMode == FullSynchronization {
 			storage = DefaultMainNetworkFullNodeStorageRequest
