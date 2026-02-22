@@ -249,6 +249,8 @@ func (r *NodeReconciler) specConfigmap(node *ethereumv1alpha1.Node, configmap *c
 		key = "static-nodes.json"
 	case ethereumv1alpha1.NethermindClient:
 		key = "static-nodes.json"
+	case ethereumv1alpha1.RethClient:
+		key = "trusted-peers.txt"
 	}
 
 	if node.Spec.Genesis != nil {

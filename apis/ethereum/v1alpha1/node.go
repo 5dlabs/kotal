@@ -206,7 +206,7 @@ const (
 )
 
 // EthereumClient is the ethereum client running on a given node
-// +kubebuilder:validation:Enum=besu;geth;nethermind
+// +kubebuilder:validation:Enum=besu;geth;nethermind;reth
 type EthereumClient string
 
 func (e EthereumClient) SupportsVerbosityLevel(level shared.VerbosityLevel) bool {
@@ -242,7 +242,16 @@ func (e EthereumClient) SupportsVerbosityLevel(level shared.VerbosityLevel) bool
 			shared.TraceLogs:
 			return true
 		}
-
+	case RethClient:
+		switch level {
+		case shared.NoLogs,
+			shared.ErrorLogs,
+			shared.WarnLogs,
+			shared.InfoLogs,
+			shared.DebugLogs,
+			shared.TraceLogs:
+			return true
+		}
 	}
 	return false
 }
@@ -254,6 +263,8 @@ const (
 	GethClient EthereumClient = "geth"
 	// NethermindClient is Nethermind .NET client
 	NethermindClient EthereumClient = "nethermind"
+	// RethClient is the Rust Ethereum client
+	RethClient EthereumClient = "reth"
 )
 
 // ImportedAccount is account derived from private key

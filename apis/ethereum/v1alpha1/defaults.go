@@ -18,6 +18,8 @@ const (
 	DefaultGethImage = "kotalco/geth:v1.13.14"
 	// DefaultNethermindImage is nethermind image
 	DefaultNethermindImage = "kotalco/nethermind:v1.25.4"
+	// DefaultRethImage is the Reth Rust Ethereum client image
+	DefaultRethImage = "ghcr.io/paradigmxyz/reth:v1.3.12"
 )
 
 // Node defaults

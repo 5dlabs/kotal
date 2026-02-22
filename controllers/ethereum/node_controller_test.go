@@ -984,4 +984,173 @@ var _ = Describe("Ethereum network controller", func() {
 		})
 	})
 
+	Context("Reth node joining mainnet with HTTP, WS, and Engine RPC", func() {
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "reth-mainnet",
+			},
+		}
+		key := types.NamespacedName{
+			Name:      "reth-node",
+			Namespace: ns.Name,
+		}
+
+		spec := ethereumv1alpha1.NodeSpec{
+			Client:   ethereumv1alpha1.RethClient,
+			Network:  ethereumv1alpha1.MainNetwork,
+			SyncMode: ethereumv1alpha1.SnapSynchronization,
+			Logging:  sharedAPI.InfoLogs,
+			RPC:      true,
+			WS:       true,
+			Engine:   true,
+			JWTSecretName: "reth-jwt-secret",
+		}
+
+		toCreate := &ethereumv1alpha1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      key.Name,
+				Namespace: key.Namespace,
+			},
+			Spec: spec,
+		}
+		t := true
+		nodeOwnerReference := metav1.OwnerReference{
+			APIVersion:         "ethereum.kotal.io/v1alpha1",
+			Kind:               "Node",
+			Name:               toCreate.Name,
+			Controller:         &t,
+			BlockOwnerDeletion: &t,
+		}
+
+		It(fmt.Sprintf("should create %s namespace", ns.Name), func() {
+			Expect(k8sClient.Create(context.Background(), ns)).Should(Succeed())
+		})
+
+		It("should create JWT secret", func() {
+			secret := corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "reth-jwt-secret",
+					Namespace: ns.Name,
+				},
+				StringData: map[string]string{
+					"secret": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+				},
+			}
+			Expect(k8sClient.Create(context.Background(), &secret)).To(Succeed())
+		})
+
+		It("should create the Reth node", func() {
+			if !useExistingCluster {
+				toCreate.Default()
+			}
+			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
+			time.Sleep(sleepTime)
+		})
+
+		It("should get the Reth node", func() {
+			fetched := &ethereumv1alpha1.Node{}
+			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
+			Expect(fetched.Spec.Client).To(Equal(ethereumv1alpha1.RethClient))
+			nodeOwnerReference.UID = fetched.GetUID()
+		})
+
+		It("should create node service with P2P, RPC, WS, and Engine ports", func() {
+			svc := &corev1.Service{}
+			Expect(k8sClient.Get(context.Background(), key, svc)).To(Succeed())
+			Expect(svc.GetOwnerReferences()).To(ContainElement(nodeOwnerReference))
+			Expect(svc.Spec.Ports).To(ContainElements(
+				gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name":     Equal("discovery"),
+					"Port":     Equal(int32(ethereumv1alpha1.DefaultP2PPort)),
+					"Protocol": Equal(corev1.ProtocolUDP),
+				}),
+				gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name": Equal("p2p"),
+					"Port": Equal(int32(ethereumv1alpha1.DefaultP2PPort)),
+				}),
+				gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name": Equal("rpc"),
+					"Port": Equal(int32(ethereumv1alpha1.DefaultRPCPort)),
+				}),
+				gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name": Equal("ws"),
+					"Port": Equal(int32(ethereumv1alpha1.DefaultWSPort)),
+				}),
+				gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name": Equal("engine"),
+					"Port": Equal(int32(ethereumv1alpha1.DefaultEngineRPCPort)),
+				}),
+			))
+		})
+
+		It("should create node statefulset with the correct Reth image", func() {
+			sts := &appsv1.StatefulSet{}
+			Expect(k8sClient.Get(context.Background(), key, sts)).To(Succeed())
+			Expect(sts.GetOwnerReferences()).To(ContainElement(nodeOwnerReference))
+			Expect(*sts.Spec.Template.Spec.SecurityContext).To(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+				"RunAsUser":    gstruct.PointTo(Equal(int64(1000))),
+				"RunAsGroup":   gstruct.PointTo(Equal(int64(3000))),
+				"FSGroup":      gstruct.PointTo(Equal(int64(2000))),
+				"RunAsNonRoot": gstruct.PointTo(Equal(true)),
+			}))
+			Expect(sts.Spec.Template.Spec.Containers[0].Image).To(Equal(ethereumv1alpha1.DefaultRethImage))
+		})
+
+		It("should allocate correct public-network resources to the Reth statefulset", func() {
+			sts := &appsv1.StatefulSet{}
+			expectedResources := corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse(ethereumv1alpha1.DefaultPublicNetworkNodeCPURequest),
+					corev1.ResourceMemory: resource.MustParse(ethereumv1alpha1.DefaultPublicNetworkNodeMemoryRequest),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse(ethereumv1alpha1.DefaultPublicNetworkNodeCPULimit),
+					corev1.ResourceMemory: resource.MustParse(ethereumv1alpha1.DefaultPublicNetworkNodeMemoryLimit),
+				},
+			}
+			Expect(k8sClient.Get(context.Background(), key, sts)).To(Succeed())
+			Expect(sts.Spec.Template.Spec.Containers[0].Resources).To(Equal(expectedResources))
+		})
+
+		It("should create node data PVC with snap-sync storage allocation", func() {
+			pvc := &corev1.PersistentVolumeClaim{}
+			expectedResources := corev1.VolumeResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse(ethereumv1alpha1.DefaultMainNetworkFastNodeStorageRequest),
+				},
+			}
+			Expect(k8sClient.Get(context.Background(), key, pvc)).To(Succeed())
+			Expect(pvc.GetOwnerReferences()).To(ContainElement(nodeOwnerReference))
+			Expect(pvc.Spec.Resources).To(Equal(expectedResources))
+		})
+
+		It("should delete the Reth node", func() {
+			toDelete := &ethereumv1alpha1.Node{}
+			Expect(k8sClient.Get(context.Background(), key, toDelete)).To(Succeed())
+			Expect(k8sClient.Delete(context.Background(), toDelete)).To(Succeed())
+			time.Sleep(sleepTime)
+		})
+
+		It("should not get the Reth node after deletion", func() {
+			fetched := &ethereumv1alpha1.Node{}
+			Expect(k8sClient.Get(context.Background(), key, fetched)).ToNot(Succeed())
+		})
+
+		if useExistingCluster {
+			It("should delete Reth node statefulset", func() {
+				sts := &appsv1.StatefulSet{}
+				Expect(k8sClient.Get(context.Background(), key, sts)).ToNot(Succeed())
+			})
+
+			It("should delete Reth node service", func() {
+				svc := &corev1.Service{}
+				Expect(k8sClient.Get(context.Background(), key, svc)).ToNot(Succeed())
+			})
+		}
+
+		It(fmt.Sprintf("should delete %s namespace", ns.Name), func() {
+			Expect(k8sClient.Delete(context.Background(), ns)).Should(Succeed())
+		})
+	})
+
 })

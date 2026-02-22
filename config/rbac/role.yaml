@@ -2,92 +2,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
 rules:
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - aptos.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - aptos.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - bitcoin.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - bitcoin.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - chainlink.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - chainlink.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - persistentvolumeclaims
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -103,11 +19,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
+  - apps
   resources:
-  - configmaps
-  - persistentvolumeclaims
-  - services
+  - statefulsets
   verbs:
   - create
   - delete
@@ -116,31 +30,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
+  - aptos.kotal.io
+  - bitcoin.kotal.io
+  - chainlink.kotal.io
   - ethereum.kotal.io
+  - filecoin.kotal.io
+  - graph.kotal.io
+  - near.kotal.io
+  - polkadot.kotal.io
+  - stacks.kotal.io
   resources:
   - nodes
   verbs:
@@ -152,7 +50,15 @@ rules:
   - update
   - watch
 - apiGroups:
+  - aptos.kotal.io
+  - bitcoin.kotal.io
+  - chainlink.kotal.io
   - ethereum.kotal.io
+  - filecoin.kotal.io
+  - graph.kotal.io
+  - near.kotal.io
+  - polkadot.kotal.io
+  - stacks.kotal.io
   resources:
   - nodes/status
   verbs:
@@ -163,25 +69,6 @@ rules:
   - ethereum2.kotal.io
   resources:
   - beaconnodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ethereum2.kotal.io
-  resources:
-  - beaconnodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ethereum2.kotal.io
-  resources:
   - validators
   verbs:
   - create
@@ -194,43 +81,12 @@ rules:
 - apiGroups:
   - ethereum2.kotal.io
   resources:
+  - beaconnodes/status
   - validators/status
   verbs:
   - get
   - patch
   - update
-- apiGroups:
-  - filecoin.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - filecoin.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - graph.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
 - apiGroups:
   - graph.kotal.io
   resources:
@@ -238,36 +94,9 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - graph.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - ipfs.kotal.io
   resources:
   - clusterpeers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ipfs.kotal.io
-  resources:
-  - clusterpeers/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ipfs.kotal.io
-  resources:
   - peers
   verbs:
   - create
@@ -280,67 +109,8 @@ rules:
 - apiGroups:
   - ipfs.kotal.io
   resources:
+  - clusterpeers/status
   - peers/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - near.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - near.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - polkadot.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - polkadot.kotal.io
-  resources:
-  - nodes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - stacks.kotal.io
-  resources:
-  - nodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - stacks.kotal.io
-  resources:
-  - nodes/status
   verbs:
   - get
   - patch

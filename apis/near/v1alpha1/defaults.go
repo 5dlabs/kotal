@@ -15,7 +15,7 @@ const (
 
 const (
 	// DefaultNearImage is the default NEAR core client image
-	DefaultNearImage = "kotalco/nearcore:v1.39.1"
+	DefaultNearImage = "ghcr.io/near/nearcore:2.10.6"
 )
 
 // Resources
