@@ -65,6 +65,42 @@ func (n *Node) validate() field.ErrorList {
 		nodeErrors = append(nodeErrors, err)
 	}
 
+	// validate reth doesn't support private networks (genesis)
+	if n.Spec.Client == RethClient && n.Spec.Genesis != nil {
+		err := field.Invalid(path.Child("client"), n.Spec.Client, "client doesn't support private networks")
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	// validate reth doesn't support mining
+	if n.Spec.Client == RethClient && n.Spec.Miner {
+		err := field.Invalid(path.Child("miner"), n.Spec.Miner, "not supported by client reth")
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	// validate reth doesn't support GraphQL
+	if n.Spec.GraphQL && n.Spec.Client == RethClient {
+		err := field.Invalid(path.Child("graphql"), n.Spec.GraphQL, "not supported by client reth")
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	// validate reth doesn't support account import
+	if n.Spec.Client == RethClient && n.Spec.Import != nil {
+		err := field.Invalid(path.Child("import"), n.Spec.Import, "not supported by client reth")
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	// validate reth doesn't support hosts whitelisting
+	if len(n.Spec.Hosts) > 0 && n.Spec.Client == RethClient {
+		err := field.Invalid(path.Child("client"), n.Spec.Client, "client doesn't support hosts whitelisting")
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	// validate reth doesn't support CORS domains
+	if len(n.Spec.CORSDomains) > 0 && n.Spec.Client == RethClient {
+		err := field.Invalid(path.Child("client"), n.Spec.Client, "client doesn't support CORS domains")
+		nodeErrors = append(nodeErrors, err)
+	}
+
 	// validate rpc must be enabled if grapql is enabled and geth is used
 	if n.Spec.Client == GethClient && n.Spec.GraphQL && !n.Spec.RPC {
 		err := field.Invalid(path.Child("rpc"), n.Spec.RPC, "must enable rpc if client is geth and graphql is enabled")
@@ -89,8 +125,13 @@ func (n *Node) validate() field.ErrorList {
 		nodeErrors = append(nodeErrors, err)
 	}
 
-	// validate only geth client supports light sync mode
-	if (n.Spec.SyncMode == LightSynchronization || n.Spec.SyncMode == SnapSynchronization) && n.Spec.Client != GethClient {
+	// validate light sync mode is geth-only; snap sync is supported by geth and reth
+	if n.Spec.SyncMode == LightSynchronization && n.Spec.Client != GethClient {
+		err := field.Invalid(path.Child("syncMode"), n.Spec.SyncMode, fmt.Sprintf("not supported by client %s", n.Spec.Client))
+		nodeErrors = append(nodeErrors, err)
+	}
+
+	if n.Spec.SyncMode == SnapSynchronization && n.Spec.Client != GethClient && n.Spec.Client != RethClient {
 		err := field.Invalid(path.Child("syncMode"), n.Spec.SyncMode, fmt.Sprintf("not supported by client %s", n.Spec.Client))
 		nodeErrors = append(nodeErrors, err)
 	}

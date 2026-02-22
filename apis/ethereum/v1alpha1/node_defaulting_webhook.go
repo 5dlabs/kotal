@@ -13,6 +13,7 @@ func (n *Node) Default() {
 	defaultAPIs := []API{Web3API, ETHAPI, NetworkAPI}
 	client := n.Spec.Client
 	nethermindNode := client == NethermindClient
+	rethNode := client == RethClient
 
 	if n.Spec.Image == "" {
 		var image string
@@ -24,6 +25,8 @@ func (n *Node) Default() {
 			image = DefaultGethImage
 		case NethermindClient:
 			image = DefaultNethermindImage
+		case RethClient:
+			image = DefaultRethImage
 		}
 
 		n.Spec.Image = image
@@ -47,7 +50,7 @@ func (n *Node) Default() {
 	if n.Spec.SyncMode == "" {
 		// public network
 		if n.Spec.Genesis == nil {
-			if n.Spec.Client == GethClient {
+			if n.Spec.Client == GethClient || n.Spec.Client == RethClient {
 				n.Spec.SyncMode = SnapSynchronization
 			} else {
 				n.Spec.SyncMode = FastSynchronization
@@ -60,13 +63,13 @@ func (n *Node) Default() {
 	// must be called after defaulting sync mode because it's depending on its value
 	n.DefaultNodeResources()
 
-	// nethermind doesn't support host whitelisting
-	if len(n.Spec.Hosts) == 0 && !nethermindNode {
+	// nethermind and reth don't support host whitelisting
+	if len(n.Spec.Hosts) == 0 && !nethermindNode && !rethNode {
 		n.Spec.Hosts = DefaultOrigins
 	}
 
-	// nethermind doesn't support cors domains
-	if len(n.Spec.CORSDomains) == 0 && !nethermindNode {
+	// nethermind and reth don't support cors domains
+	if len(n.Spec.CORSDomains) == 0 && !nethermindNode && !rethNode {
 		n.Spec.CORSDomains = DefaultOrigins
 	}
 
