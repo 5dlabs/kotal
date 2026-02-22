@@ -15,37 +15,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     - name: Generate Docker metadata
       id: meta
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@v5
       with:
         images: |
-          docker.io/kotalco/kotal
+          docker.io/5dlabs/kotal
         tags: |
           type=ref,event=tag
           type=sha,prefix=,suffix=,format=short
         flavor: |
           latest=true
 
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
     - name: Login to DockerHub
-      uses: docker/login-action@v2
+      # Only push on non-PR events where credentials are available
+      if: github.event_name != 'pull_request' && secrets.DOCKERHUB_TOKEN != ''
+      uses: docker/login-action@v3
       with:
-        username: kotalco
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v6
       with:
         context: .
-        push: true
+        push: ${{ github.event_name != 'pull_request' && secrets.DOCKERHUB_TOKEN != '' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
