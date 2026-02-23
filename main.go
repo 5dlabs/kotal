@@ -25,6 +25,7 @@ import (
 	nearv1alpha1 "github.com/kotalco/kotal/apis/near/v1alpha1"
 	polkadotv1alpha1 "github.com/kotalco/kotal/apis/polkadot/v1alpha1"
 	stacksv1alpha1 "github.com/kotalco/kotal/apis/stacks/v1alpha1"
+	opstackv1alpha1 "github.com/kotalco/kotal/apis/opstack/v1alpha1"
 	aptoscontroller "github.com/kotalco/kotal/controllers/aptos"
 	bitcoincontroller "github.com/kotalco/kotal/controllers/bitcoin"
 	chainlinkcontroller "github.com/kotalco/kotal/controllers/chainlink"
@@ -34,6 +35,7 @@ import (
 	graphcontrollers "github.com/kotalco/kotal/controllers/graph"
 	ipfscontroller "github.com/kotalco/kotal/controllers/ipfs"
 	nearcontroller "github.com/kotalco/kotal/controllers/near"
+	opstackcontroller "github.com/kotalco/kotal/controllers/opstack"
 	polkadotcontroller "github.com/kotalco/kotal/controllers/polkadot"
 	"github.com/kotalco/kotal/controllers/shared"
 	stackscontroller "github.com/kotalco/kotal/controllers/stacks"
@@ -59,6 +61,7 @@ func init() {
 	utilruntime.Must(stacksv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(aptosv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(graphv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(opstackv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -292,6 +295,20 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Node")
 		os.Exit(1)
+	}
+
+	if err = (&opstackcontroller.NodeReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Node")
+		os.Exit(1)
+	}
+	if enableWebhooks {
+		if err = (&opstackv1alpha1.Node{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Node")
+			os.Exit(1)
+		}
 	}
 	// +kubebuilder:scaffold:builder
 

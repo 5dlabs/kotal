@@ -37,6 +37,7 @@ rules:
   - filecoin.kotal.io
   - graph.kotal.io
   - near.kotal.io
+  - opstack.kotal.io
   - polkadot.kotal.io
   - stacks.kotal.io
   resources:
@@ -57,6 +58,7 @@ rules:
   - filecoin.kotal.io
   - graph.kotal.io
   - near.kotal.io
+  - opstack.kotal.io
   - polkadot.kotal.io
   - stacks.kotal.io
   resources:

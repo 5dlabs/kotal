@@ -1,0 +1,245 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.1
+  name: nodes.opstack.kotal.io
+spec:
+  group: opstack.kotal.io
+  names:
+    kind: Node
+    listKind: NodeList
+    plural: nodes
+    singular: node
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.network
+      name: Network
+      type: string
+    - jsonPath: .spec.client
+      name: Client
+      type: string
+    - jsonPath: .spec.l1Endpoint
+      name: L1Endpoint
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Node is the Schema for the nodes API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NodeSpec is the specification of the node
+            properties:
+              client:
+                description: Client is the execution client running on the node
+                enum:
+                - op-geth
+                - op-reth
+                - base-reth-node
+                type: string
+              corsDomains:
+                description: CORSDomains is the domains from which to accept cross
+                  origin requests
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              engine:
+                description: Engine enables authenticated Engine RPC APIs
+                type: boolean
+              enginePort:
+                description: EnginePort is engine authenticated RPC APIs port
+                type: integer
+              extraArgs:
+                additionalProperties:
+                  type: string
+                description: ExtraArgs is extra arguments to pass down to the execution
+                  client cli
+                type: object
+              hosts:
+                description: Hosts is a list of hostnames to whitelist for RPC access
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              image:
+                description: Image is Ethereum node client image
+                type: string
+              jwtSecretName:
+                description: JWTSecretName is kubernetes secret name holding JWT secret
+                type: string
+              l1BeaconEndpoint:
+                description: L1BeaconEndpoint is the REST endpoint of the L1 Beacon
+                  node
+                type: string
+              l1Endpoint:
+                description: L1Endpoint is the RPC endpoint of the L1 Ethereum node
+                type: string
+              logging:
+                description: Logging is logging verbosity level
+                enum:
+                - "off"
+                - fatal
+                - error
+                - warn
+                - info
+                - debug
+                - trace
+                - all
+                type: string
+              network:
+                description: Network specifies the network to join
+                enum:
+                - base
+                - base-sepolia
+                - op-mainnet
+                - op-sepolia
+                type: string
+              nodeExtraArgs:
+                additionalProperties:
+                  type: string
+                description: NodeExtraArgs is extra arguments to pass down to the
+                  rollup driver (op-node) cli
+                type: object
+              nodeImage:
+                description: NodeImage is the rollup driver (op-node) image
+                type: string
+              p2pPort:
+                description: P2PPort is port used for peer to peer communication
+                type: integer
+              replicas:
+                description: Replicas is number of replicas
+                enum:
+                - 0
+                - 1
+                type: integer
+              resources:
+                description: Resources is node compute and storage resources
+                properties:
+                  cpu:
+                    description: CPU is cpu cores the node requires
+                    pattern: ^[1-9][0-9]*m?$
+                    type: string
+                  cpuLimit:
+                    description: CPULimit is cpu cores the node is limited to
+                    pattern: ^[1-9][0-9]*m?$
+                    type: string
+                  memory:
+                    description: Memory is memmory requirements
+                    pattern: ^[1-9][0-9]*[KMGTPE]i$
+                    type: string
+                  memoryLimit:
+                    description: MemoryLimit is cpu cores the node is limited to
+                    pattern: ^[1-9][0-9]*[KMGTPE]i$
+                    type: string
+                  storage:
+                    description: Storage is disk space storage requirements
+                    pattern: ^[1-9][0-9]*[KMGTPE]i$
+                    type: string
+                  storageClass:
+                    description: StorageClass is the volume storage class
+                    type: string
+                type: object
+              rpc:
+                description: RPC is whether HTTP-RPC server is enabled or not
+                type: boolean
+              rpcAPI:
+                description: RPCAPI is a list of rpc services to enable
+                items:
+                  description: API is RPC API to be exposed by RPC or web socket server
+                  enum:
+                  - admin
+                  - clique
+                  - debug
+                  - eea
+                  - eth
+                  - ibft
+                  - miner
+                  - net
+                  - perm
+                  - plugins
+                  - priv
+                  - txpool
+                  - web3
+                  - rollup
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              rpcPort:
+                description: RPCPort is HTTP-RPC server listening port
+                type: integer
+              syncMode:
+                description: SyncMode is the node synchronization mode
+                enum:
+                - fast
+                - full
+                - snap
+                type: string
+              ws:
+                description: WS is whether web socket server is enabled or not
+                type: boolean
+              wsAPI:
+                description: WSAPI is a list of WS services to enable
+                items:
+                  description: API is RPC API to be exposed by RPC or web socket server
+                  enum:
+                  - admin
+                  - clique
+                  - debug
+                  - eea
+                  - eth
+                  - ibft
+                  - miner
+                  - net
+                  - perm
+                  - plugins
+                  - priv
+                  - txpool
+                  - web3
+                  - rollup
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              wsPort:
+                description: WSPort is the web socket server listening port
+                type: integer
+            required:
+            - client
+            - l1BeaconEndpoint
+            - l1Endpoint
+            - network
+            type: object
+          status:
+            description: NodeStatus defines the observed state of Node
+            properties:
+              consensus:
+                description: Consensus is network consensus algorithm
+                type: string
+              network:
+                description: Network is the network this node is joining
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
